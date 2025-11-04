@@ -26,6 +26,7 @@ COIN_COLOR = (255, 200, 0)
 
 # ゲームパラメータ
 GROUND_Y = HEIGHT - 100
+GROUND_Y = HEIGHT - 80
 SCROLL_SPEED = 5  # 初期スクロール速度（px/frame）
 SPEED_INCREASE_RATE = 0.00005  # スコア（距離）に応じて速度増加
 
@@ -36,11 +37,14 @@ BIG_FONT = pygame.font.SysFont("meiryo", 48)
 # サウンド（ファイルがあれば好きなファイル名を指定する）
 # もしファイルが無い場合はコメントアウトしても動きます
 try:
-    JUMP_SOUND = pygame.mixer.Sound("ex05-2/se_jump1.mp3")  # 効果音を読み取る
-    HIT_SOUND = pygame.mixer.Sound("ex05-2/爆発1.mp3")
-    COIN_SOUND = pygame.mixer.Sound("ex05-2/coin002.mp3")
-    pygame.mixer.music.load("ex05-2/maou_14_shining_star.mp3")  #  BGMを再生
+    JUMP_SOUND = pygame.mixer.Sound("ex5-2/se_jump1.mp3")  # 効果音を読み取る
+    HIT_SOUND = pygame.mixer.Sound("ex5-2/爆発1.mp3")
+    COIN_SOUND = pygame.mixer.Sound("ex5-2/coin002.mp3")
+    pygame.mixer.music.load("ex5-2/maou_14_shining_star.mp3")  #  BGMを再生
     pygame.mixer.music.set_volume(0.5)  # 音量
+    JUMP_SOUND = pygame.mixer.Sound("ex5-2/se_jump1.mp3")
+    HIT_SOUND = pygame.mixer.Sound("ex5-2/爆発1.mp3")
+    COIN_SOUND = pygame.mixer.Sound("ex5-2/coin002.mp3")
 except Exception:
     JUMP_SOUND = None
     HIT_SOUND = None
@@ -91,6 +95,8 @@ class Player:
         base_h = self.height // 2 if self.ducking else self.height
         if self.y >= GROUND_Y :
             self.y = GROUND_Y 
+        if self.y >= GROUND_Y - base_h:
+            self.y = GROUND_Y - base_h
             self.vy = 0
             self.on_ground = True
             self.jump_count = 0
@@ -180,6 +186,7 @@ class Ground:
         if self.tiles and self.tiles[0].right < 0:
             first = self.tiles.pop(0)
             first.x = self.tiles[-1].right 
+            first.x = self.tiles[-1].right
             self.tiles.append(first)
 
     def draw(self, surf):
@@ -351,7 +358,7 @@ def game_loop():
             SCREEN.blit(overlay, (0,0))
             draw_text(SCREEN, "GAME OVER", WIDTH//2 - 120, HEIGHT//2 - 60, BIG_FONT, (255,180,0))
             draw_text(SCREEN, f"距離: {int(distance)}m  スコア: {score}", WIDTH//2 - 180, HEIGHT//2, FONT, (255,255,255))
-            draw_text(SCREEN, "Rでリスタート / ESCで終了", WIDTH//2 - 140, HEIGHT//2 + 40, FONT, (200,200,200))
+            draw_text(SCREEN, "Rでホーム画面 / ESCで終了", WIDTH//2 - 140, HEIGHT//2 + 40, FONT, (200,200,200))
 
         pygame.display.flip()
 
@@ -362,6 +369,77 @@ def game_loop():
 # ----------------------------
 if __name__ == "__main__":
     pygame.mixer.music.play(-1)  # 最初の一回BGMを流す
-    while True:
-        game_loop()
 
+    # ----------------------------
+# スタート画面（ホーム画面）
+# ----------------------------
+# ----------------------------
+# スタート画面（ホーム画面）
+# ----------------------------
+def show_start_screen():
+    title_font = pygame.font.SysFont("meiryo", 72)
+    info_font = pygame.font.SysFont("meiryo", 32)
+
+    # 背景と地面の準備
+    ground = Ground()
+    player = Player(140, GROUND_Y - 48)
+
+    blink_timer = 0
+    show_text = True
+    scroll_speed = 2  # タイトル画面ではゆっくり走行
+
+    while True:
+        CLOCK.tick(FPS)
+
+        # ----------------
+        # イベント処理
+        # ----------------
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    return  # Rでスタート
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+        # ----------------
+        # 背景・アニメーション更新
+        # ----------------
+        ground.update(scroll_speed)
+        player.update(scroll_speed)
+
+        # ----------------
+        # 描画
+        # ----------------
+        SCREEN.fill(SKY)
+        ground.draw(SCREEN)
+        player.draw(SCREEN)
+
+        # タイトル表示
+        title_surface = title_font.render("カー走", True, (255, 255, 255))
+        SCREEN.blit(title_surface, (WIDTH//2 - title_surface.get_width()//2, HEIGHT//3))
+
+        # 点滅するテキスト
+        blink_timer += 1
+        if blink_timer > 30:
+            blink_timer = 0
+            show_text = not show_text
+
+        if show_text:
+            info_surface = info_font.render("Rキーでスタート！", True, (255, 240, 100))
+            SCREEN.blit(info_surface, (WIDTH//2 - info_surface.get_width()//2, HEIGHT//1.7))
+
+        draw_text(SCREEN, "ESCキーで終了", WIDTH//2 - 100, HEIGHT - 60, FONT, (230,230,230))
+
+        pygame.display.flip()
+
+
+# ----------------------------
+# ゲーム全体のループ（リスタート対応）
+# ----------------------------
+while True:
+    show_start_screen()
+    game_loop()

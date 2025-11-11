@@ -168,7 +168,7 @@ class Pit:
         self.x -= speed
 
     def draw(self, surf):
-        # 穴の部分を黒っぽく塗る
+        # 穴の部分を黒っぽく塗った
         pygame.draw.rect(surf, (0, 0, 0), (self.x, self.y, self.width, HEIGHT - self.y))
         pygame.draw.line(surf, (255,255,255), (self.x, self.y), (self.x + self.width, self.y), 2)
 
